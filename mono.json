@@ -1,0 +1,15 @@
+{
+    "source": "github",
+    "owner": "IonicaBizau",
+    "name": "dev_import",
+    "dependencies": [
+        "/main.js",
+        "http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"
+    ],
+    "operations": [
+        { "file": "operations.js", "function": "importApps" },
+        { "file": "operations.js", "function": "importModules" },
+        { "file": "operations.js", "function": "refreshApps" },
+        { "file": "operations.js", "function": "refreshModules" }
+    ]
+}

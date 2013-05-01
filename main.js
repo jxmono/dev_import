@@ -1,0 +1,3 @@
+module.exports = function (config) {
+    // TODO Do something...
+}
