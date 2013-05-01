@@ -9,25 +9,54 @@ module.exports = function (config) {
 
 function handlers() {
 
-    $(".btn-import", self.dom).on("click", function() {
-        importApplications();       
+    $(".btn-import").on("click", function() {
+
+        var btn = $(this);
+
+        // UI
+        btn.hide();
+        var spn = $('.importSpinner', self.dom).clone();
+        spn.insertAfter(this);
+
+        // prepare the link parameters
+        var data = {
+            type: btn.attr("data-type"),
+            subtype: btn.attr("data-subtype")
+        };
+
+        // do some error checks
+        if (!data.type.match(/^application|module$/)) {
+            showError("Invalid import type: " + data.type + ". Valid types are: module, application");
+            uiBack(btn, spn);
+            return;
+        }
+        if (!data.subtype.match(/^owner|collaborator$/)) {
+            showError("Invalid import subtype: " + data.subtype + ". Valid subtypes are: owner, collaborator");
+            uiBack(btn, spn);
+            return;
+        }
+
+        // and go for it!
+        self.link("importApps", function (err, data) {
+
+            if (err) {
+                showError(err);
+            }
+
+            uiBack(btn, spn);
+        });
+
+        // return false otherwise this could cause problems if this is an <a> tag
+        return false;
     });
 }
 
-function importApplications() {
+function uiBack(btn, spn) {
+    spn.remove();
+    btn.show();
+}
 
-    $(".spinner", self.dom).fadeIn();
-    $(".btn-import", self.dom).attr("disabled", "");
-
-    self.link("importApps", function (err, data) {
-
-        $(".btn-import", self.dom).removeAttr("disabled");
-        $(".spinner", self.dom).fadeOut();
-       
-        if (err) {
-           
-            $(".error-message", self.dom).text(err); 
-            $("#modal-error", self.dom).modal("show");
-        }
-    });
+function showError(error) {
+    $(".error-message", self.dom).text(error); 
+    $("#modal-error", self.dom).modal("show");
 }
