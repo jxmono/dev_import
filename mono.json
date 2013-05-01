@@ -8,8 +8,6 @@
     ],
     "operations": [
         { "file": "operations.js", "function": "importApps" },
-        { "file": "operations.js", "function": "importModules" },
-        { "file": "operations.js", "function": "refreshApps" },
-        { "file": "operations.js", "function": "refreshModules" }
+        { "file": "operations.js", "function": "importModules" }
     ]
 }
