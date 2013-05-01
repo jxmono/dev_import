@@ -51,7 +51,7 @@ exports.importApps = function(link) {
             if (!appObj) {
                 link.send(200, monoProjects);
 
-                Apps.delete(link, function (err) {
+                Projects.delete(link, function (err) {
                     
                     if (err) {
                         link.send(400, err);
@@ -60,7 +60,7 @@ exports.importApps = function(link) {
                    
                     console.log(monoProjects);
 
-                    Apps.insert(link, monoProjects, function(err, data) {
+                    Projects.insert(link, monoProjects, function(err, data) {
                         
                         if (err) {
                             link.send(400, err);
