@@ -19,19 +19,45 @@ var Modules = require("./modules");
  *  }
  *  4. Insert the array of objects into databse
  */
-
 exports.importApps = function(link) {
-    
-    // TODO Build appsArray
+  
 
-    Apps.import(link, appsArray, function(err, data) {
-        
+    var data = {
+        auth: {
+            type: "oauth",
+            token: link.session.accessToken
+        }
+    };
+
+    var username = link.session.login;
+
+    M.repo.getUserRepos("github", username, data, function (err, appsArray) {
+
         if (err) {
             link.send(400, err);
             return;
         }
 
-        link.send(200, data);
+        // TODO Application or Module?
+        // TODO Get only what we want from appsArray[i].
+
+        Apps.delete(link, function (err) {
+            
+            if (err) {
+                link.send(400, err);
+                return;
+            }
+            
+            Apps.insert(link, appsArray, function(err, data) {
+                
+                if (err) {
+                    link.send(400, err);
+                    return;
+                }
+
+                link.send(200, data);
+            });
+        });
     });
 };
 
@@ -44,7 +70,6 @@ exports.refreshApps = function(link) {
         MODULES PART
     ===================
 */
-
 exports.importModules = function(link) {
     // Not yet implemented
 };

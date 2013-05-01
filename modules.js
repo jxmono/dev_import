@@ -15,7 +15,7 @@ exports.insert = function(link, modulesArray, callback) {
             link.send(err);
             return;
         }
-                                        }
+        
         M.database.open(ds, function(err, db) {
 
             if (err) {
@@ -54,7 +54,7 @@ exports.delete = function(link, callback) {
             link.send(err);
             return;
         }
-                                        }
+        
         M.database.open(ds, function(err, db) {
 
             if (err) {
