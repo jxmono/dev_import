@@ -21,6 +21,8 @@ var Projects = require("./projects");
 exports.importProjects = function(link) {
     
     link.data = link.data || {};
+ 
+    // TODO Validate data
 
     if (!link.data.type) {
         link.send(400, "Missing type. Type can be 'a' (for applications) or 'm' (for modules).");
@@ -32,14 +34,13 @@ exports.importProjects = function(link) {
             type: "oauth",
             token: link.session.accessToken
         },
-        type: "owner",
-        per_page: 100
+        type: link.data.subtype,
+        per_page: 100,
+        user: link.session.login
     };
 
-    var username = link.session.login;
-
     // Get user repositories
-    M.repo.getUserRepos("github", username, data, function (err, reposArray) {
+    M.repo.getUserRepos("github", data.user, data, function (err, reposArray) {
 
         if (err) {
             link.send(400, err);
@@ -62,7 +63,7 @@ exports.importProjects = function(link) {
                     type: "oauth",
                     token: link.session.accessToken
                 },
-                user: username,
+                user: appObj.owner.login,
                 path: (link.data.type === "a" ? M.config.APPLICATION_DESCRIPTOR_NAME : M.config.MODULE_DESCRIPTOR_NAME),
                 repo: currentRepo,
                 appObj: appObj
@@ -98,6 +99,7 @@ exports.importProjects = function(link) {
                         var monoProjectData = {
                             "type": link.data.type,
                             "owner": link.session._uid,
+                            "ownership": link.data.subtype,
                             "repo_url": appObj.git_url,
                             "repo": "github/" + appObj.full_name,
                             "name": jsonDescriptor.name,
