@@ -33,20 +33,21 @@ function handlers() {
         }
 
         if (!data.subtype.match(/^owner|member$/)) {
-            showError("Invalid import subtype: " + data.subtype + ". Valid subtypes are: owner, collaborator");
+            showError("Invalid import subtype: " + data.subtype + ". Valid subtypes are: owner, member");
             uiBack(btn, spn);
             return;
         }
 
         // and go for it!
         // Import applications (data: "a")
-        self.link("importProjects", { "data": data }, function (err, data) {
+        self.link("importProjects", { "data": data }, function (err, projects) {
 
             if (err) {
                 showError(err);
             }
             else {
-                self.emit("importedOwned");
+                var message = "imported" + capitalizeFirstLetter(data.subtype) + "Apps";
+                self.emit(message);
             }
 
             uiBack(btn, spn);
@@ -65,4 +66,8 @@ function uiBack(btn, spn) {
 function showError(error) {
     $(".error-message", self.dom).text(error); 
     $("#modal-error", self.dom).modal("show");
+}
+
+function capitalizeFirstLetter(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
 }
