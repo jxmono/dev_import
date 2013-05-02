@@ -62,7 +62,7 @@ exports.importProjects = function(link) {
                     token: link.session.accessToken
                 },
                 user: username,
-                path: (link.data === "a" ? M.config.APPLICATION_DESCRIPTOR_NAME : M.config.MODULE_DESCRIPTOR_NAME),
+                path: (link.data.type === "a" ? M.config.APPLICATION_DESCRIPTOR_NAME : M.config.MODULE_DESCRIPTOR_NAME),
                 repo: currentRepo,
                 appObj: appObj
             };
@@ -95,7 +95,7 @@ exports.importProjects = function(link) {
                         
                         // Data to insert in database for each Mono project
                         var monoProjectData = {
-                            "type": link.data,
+                            "type": link.data.type,
                             "owner": link.session._uid,
                             "repo_url": appObj.git_url,
                             "repo": "github/" + appObj.full_name,
@@ -111,7 +111,7 @@ exports.importProjects = function(link) {
                 if (count === reposArray.length) {
                
                     var filters = { 
-                        "type": link.data
+                        "type": link.data.type
                     };
 
                     var options = {};
