@@ -19,7 +19,7 @@ var Projects = require("./projects");
  *  it will be "m" (module).
  */
 exports.importProjects = function(link) {
-
+    
     link.data = link.data || {};
 
     if (!link.data.type) {
@@ -38,6 +38,7 @@ exports.importProjects = function(link) {
 
     var username = link.session.login;
 
+    // Get user repositories
     M.repo.getUserRepos("github", username, data, function (err, reposArray) {
 
         if (err) {
@@ -103,6 +104,7 @@ exports.importProjects = function(link) {
                             "descriptor": jsonDescriptor
                         };
                         
+                        // Push project data in Mono projects array.
                         monoProjects.push(monoProjectData);
                     }
                 }
