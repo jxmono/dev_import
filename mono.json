@@ -7,7 +7,6 @@
         "http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"
     ],
     "operations": [
-        { "file": "operations.js", "function": "importApps" },
-        { "file": "operations.js", "function": "importModules" }
+        { "file": "operations.js", "function": "importProjects" }
     ]
 }

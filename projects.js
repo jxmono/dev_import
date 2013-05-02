@@ -36,10 +36,18 @@ exports.insert = function(link, projectsArray, callback) {
 /*
  *  Deletes all projects from database
  *  It's used for refresh operation
- *  e.g: filter = { "type": "m" } will 
+ *  e.g: filters = { "type": "m" } will 
  *  delete only modules
  */
-exports.delete = function(link, filter, callback) {
+exports.delete = function(link, filters, options, callback) {
+
+    if (!callback) {
+        callback = options;
+    }
+
+    if (!callback) {
+        callback = filters;
+    }
 
     M.datasource.resolve(link.params.ds, function(err, ds) {
         if (err) { return callback(err); }
@@ -50,7 +58,7 @@ exports.delete = function(link, filter, callback) {
             db.collection(ds.collection, function(err, collection) {
                 if (err) { return callback(err); }
 
-                collection.remove(filter, function(err) {
+                collection.remove(filters, options, function(err) {
 
                     if (err) { return callback(err); }
 

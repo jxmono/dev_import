@@ -1,15 +1,11 @@
+// Require projects module from same directory.
 var Projects = require("./projects");
 
 /*
-    ================
-        APPS PART
-    ================
-*/
-
-/*
- *  Import apps
+ *  Import projects
+ *  ===============
  *  1. Get all repositories from Github for logged owner
- *  2. Filter for Mono apps
+ *  2. Filter for Mono projects
  *  3. Create monoProjects array of objects:
  *  {
  *      "type": "a",
@@ -17,8 +13,19 @@ var Projects = require("./projects");
  *      "owner": link.session.ownerId
  *  }
  *  4. Insert the array of objects into database
+ *
+ *  A Mono project can be an application or a module.
+ *  If it's an application its type will be "a", else 
+ *  it will be "m" (module).
  */
-exports.importApps = function(link) {
+exports.importProjects = function(link) {
+
+    link.data = link.data || {};
+
+    if (!link.data.type) {
+        link.send(400, "Missing type. Type can be 'a' (for applications) or 'm' (for modules).");
+        return;
+    }
 
     var data = {
         auth: {
@@ -38,86 +45,96 @@ exports.importApps = function(link) {
             return;
         }
 
-        /*
-         *  Recursive function that goes throught every 
-         *  repository from Github and check if it is a 
-         *  Mono application
-         */
-        var i = 0;
         var monoProjects = [];
-        
-        function getMonoApps(appObj) {
+        var count = 0;
 
-            if (!appObj) {
-                link.send(200, monoProjects);
-
-                Projects.delete(link, function (err) {
-                    
-                    if (err) {
-                        link.send(400, err);
-                        return;
-                    }
-                   
-                    console.log(monoProjects);
-
-                    Projects.insert(link, monoProjects, function(err, data) {
-                        
-                        if (err) {
-                            link.send(400, err);
-                            return;
-                        }
-
-                        link.send(200, data);
-                    });
-                });
-                return;
-            }
-
+        // For each repo in reposArray
+        for (var i = 0; i < reposArray.length; ++i) {
+            
+            // Repo object
+            var appObj = reposArray[i];
             var currentRepo = appObj.name;
-            console.log(currentRepo);
 
-            var data = {
+            // This variable will be passed into hasFile function.
+            var searchData = {
                 auth: {
                     type: "oauth",
                     token: link.session.accessToken
                 },
                 user: username,
-                path: M.config.APPLICATION_DESCRIPTOR_NAME,
-                repo: currentRepo
+                path: (link.data === "a" ? M.config.APPLICATION_DESCRIPTOR_NAME : M.config.MODULE_DESCRIPTOR_NAME),
+                repo: currentRepo,
+                appObj: appObj
             };
 
-            M.repo.hasFile("github", data, function (err, descriptor) {
+            // In same time hasFile function will be called multiple times.
+            // This is a great optimization method.
+            M.repo.hasFile("github", searchData, function (err, descriptor, data) {
+               
+                // Increment count.
+                ++count;
                 
+                // An non-404 error ocured. Kill operation.
                 if (err && err.code !== 404) {
                     link.send(400, err);
                     return;
                 }
 
+                // The repo is a Mono project
                 if (descriptor) {
-                    
-                    var repo = reposArray[i];
 
-                    var monoProjectData = {
-                        "type": "a",
-                        "owner": link.session._uid,
-                        "repo": appObj.git_url
-                    };
-                    
-                    monoProjects.push(monoProjectData);
+                    var jsonDescriptor;
+                    try {
+                        jsonDescriptor = JSON.parse(descriptor);
+                    }
+                    catch(e) {}
+
+                    if (jsonDescriptor) {
+                        appObj = data.appObj;
+                        var repo = reposArray[i];
+                        
+                        // Data to insert in database for each Mono project
+                        var monoProjectData = {
+                            "type": link.data,
+                            "owner": link.session._uid,
+                            "repo_url": appObj.git_url,
+                            "repo": "github/" + appObj.full_name,
+                            "name": jsonDescriptor.name,
+                            "descriptor": jsonDescriptor
+                        };
+                        
+                        monoProjects.push(monoProjectData);
+                    }
                 }
 
-                getMonoApps(reposArray[++i]);
+                // When count is reposArray.length, all repos were completed
+                if (count === reposArray.length) {
+               
+                    var filters = { 
+                        "type": link.data
+                    };
+
+                    var options = {};
+                    
+                    Projects.delete(link, filters, options, function (err) {
+                        
+                        if (err) {
+                            link.send(400, err);
+                            return;
+                        }
+                       
+                        Projects.insert(link, monoProjects, function(err, data) {
+                            
+                            if (err) {
+                                link.send(400, err);
+                                return;
+                            }
+
+                            link.send(200, data);
+                        });
+                    });
+                }
             });
         }
-        getMonoApps(reposArray[0]);
     });
-};
-
-/*
-    ===================
-        MODULES PART
-    ===================
-*/
-exports.importModules = function(link) {
-    // Not yet implemented
 };

@@ -37,7 +37,8 @@ function handlers() {
         }
 
         // and go for it!
-        self.link("importApps", function (err, data) {
+        // Import applications (data: "a")
+        self.link("importProjects", { "data": { "type": "a" } }, function (err, data) {
 
             if (err) {
                 showError(err);
