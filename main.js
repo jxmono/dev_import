@@ -43,6 +43,9 @@ function handlers() {
             if (err) {
                 showError(err);
             }
+            else {
+                self.emit("importedOwned");
+            }
 
             uiBack(btn, spn);
         });
