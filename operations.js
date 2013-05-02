@@ -72,7 +72,7 @@ exports.importProjects = function(link) {
             // In same time hasFile function will be called multiple times.
             // This is a great optimization method.
             M.repo.hasFile("github", searchData, function (err, descriptor, data) {
-               
+
                 // Increment count.
                 ++count;
                 
@@ -115,7 +115,8 @@ exports.importProjects = function(link) {
                 if (count === reposArray.length) {
                
                     var filters = { 
-                        "type": link.data.type
+                        "type": link.data.type,
+                        "ownership": link.data.subtype
                     };
 
                     var options = {};
