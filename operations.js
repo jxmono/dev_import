@@ -34,7 +34,7 @@ exports.importProjects = function(link) {
     }
 
     var data = {
-        auth: link.session.auth
+        auth: link.session.auth,
         type: link.data.subtype,
         user: link.session.login
     };
@@ -50,7 +50,7 @@ exports.importProjects = function(link) {
         // TODO Merge with Github
         M.repo.getUserRepos("bitbucket", data.user, data, function (err, reposArray) {
             
-            if (err) { return link.send(400, err); }{
+            if (err) { return link.send(400, err); }
             
             var monoProjects = [];
             var count = 0;
