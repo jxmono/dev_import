@@ -15,6 +15,7 @@ var Projects = require("./projects");
  *      "repo_url":         "... .git",
  *      "name":             "Name of Mono project",
  *      "descriptor":       {...}
+ *      "provider":         "github/bitbucket"
  *  }
  *  4. Insert the array of objects into database
  *
@@ -23,7 +24,7 @@ var Projects = require("./projects");
  *  it will be "m" (module).
  */
 exports.importProjects = function(link) {
-    
+
     link.data = link.data || {};
  
     // TODO Validate data
@@ -33,6 +34,8 @@ exports.importProjects = function(link) {
         return;
     }
 
+    var SECRETS = require(M.app.getPath() + "/secrets.json")[link.session.provider];
+
     var data = {
         auth: link.session.auth,
         type: link.data.subtype,
@@ -41,227 +44,127 @@ exports.importProjects = function(link) {
 
     // TODO How will this appear when 
     //      the accounts will be connected?
-    if (link.session.provider === "bitbucket") {
+    switch (link.session.provider) {
+        case "bitbucket":
 
-        data.secrets = require(M.app.getPath() + "/secrets.json")[link.session.provider];
+            data.secrets = SECRETS;
 
-        if (!typeof OAUTH) { return link.send(400, "First, login with Bitbucket."); }
+            if (!typeof OAUTH) { return link.send(400, "First, login with Bitbucket."); }
+        break;
 
-        // TODO Merge with Github
-        M.repo.getUserRepos("bitbucket", data.user, data, function (err, reposArray) {
-            
-            if (err) { return link.send(400, err); }
-            
-            var monoProjects = [];
-            var count = 0;
+        case "github":
+            data.auth.token = data.auth.access_token;
+        break;
 
-            // For each repo in reposArray
-            for (var i = 0; i < reposArray.length; ++i) {
-                    
-                // Repo object
-                var appObj = reposArray[i];
-                var currentRepo = appObj.name;
-
-                // This variable will be passed into hasFile function.
-                var searchData = {
-                    auth: {
-                        type: "oauth",
-                        token: link.session.accessToken
-                    },
-                    user: appObj.owner.login,
-                    path: (link.data.type === "a" ? M.config.APPLICATION_DESCRIPTOR_NAME : M.config.MODULE_DESCRIPTOR_NAME),
-                    repo: currentRepo,
-                    appObj: appObj
-                };
-
-                // In same time hasFile function will be called multiple times.
-                // This is a great optimization method.
-                M.repo.hasFile("bitbucket", searchData, function (err, descriptor, data) {
-
-                    // Increment count.
-                    ++count;
-                    
-                    // An non-404 error ocured. Kill operation.
-                    if (err && err.code !== 404) {
-                        link.send(400, err);
-                        return;
-                    }
-
-                    // The repo is a Mono project
-                    if (descriptor) {
-
-                        var jsonDescriptor;
-                        try {
-                            jsonDescriptor = JSON.parse(descriptor);
-                        }
-                        catch(e) {}
-
-                        if (jsonDescriptor) {
-                            appObj = data.appObj;
-                            var repo = reposArray[i];
-                            
-                            // Data to insert in database for each Mono project
-                            var monoProjectData = {
-                                "type": link.data.type,
-                                "owner": link.session._uid,
-                                "ownership": link.data.subtype,
-                                "repo_url": appObj.git_url,
-                                "repo": "bitbucket/" + appObj.full_name,
-                                "name": jsonDescriptor.name,
-                                "descriptor": jsonDescriptor
-                            };
-                            
-                            // Push project data in Mono projects array.
-                            monoProjects.push(monoProjectData);
-                        }
-                    }
-
-                    // When count is reposArray.length, all repos were completed
-                    if (count === reposArray.length) {
-                   
-                        var filters = { 
-                            "type": link.data.type,
-                            "ownership": link.data.subtype
-                        };
-
-                        var options = {};
-                        
-                        Projects.delete(link, filters, options, function (err) {
-                            
-                            if (err) {
-                                link.send(400, err);
-                                return;
-                            }
-                           
-                            Projects.insert(link, monoProjects, function(err, data) {
-                                
-                                if (err) {
-                                    link.send(400, err);
-                                    return;
-                                }
-
-                                link.send(200, data);
-                            });
-                        });
-                    }
-                });
-            }
-        });
-
-        return;
+        default:
+            return link.session(400, "Invalid provider.");
     }
+    
+    M.repo.getUserRepos(link.session.provider, data.user, data, function (err, reposArray) {
+        
+        if (err) { return link.send(400, err); }
+        
+        var monoProjects = [];
+        var count = 0;
 
-    // Get user repositories
-    if (link.session.provider === "github") {
-
-        // TODO Hide this in API
-        data.per_page = 100;
-
-        M.repo.getUserRepos("github", data.user, data, function (err, reposArray) {
-
-            if (err) {
-                link.send(400, err);
-                return;
-            }
-
-            var monoProjects = [];
-            var count = 0;
-
-            // For each repo in reposArray
-            for (var i = 0; i < reposArray.length; ++i) {
+        // For each repo in reposArray
+        for (var i = 0; i < reposArray.length; ++i) {
                 
-                // Repo object
-                var appObj = reposArray[i];
-                var currentRepo = appObj.name;
+            // Repo object
+            var appObj = reposArray[i];
+            
+            // slug for BB which doesn't exist in GH repo objects
+            var currentRepo = appObj.slug || appObj.name;
 
-                // This variable will be passed into hasFile function.
-                var searchData = {
-                    auth: {
-                        type: "oauth",
-                        token: link.session.accessToken
-                    },
-                    user: appObj.owner.login,
-                    path: (link.data.type === "a" ? M.config.APPLICATION_DESCRIPTOR_NAME : M.config.MODULE_DESCRIPTOR_NAME),
-                    repo: currentRepo,
-                    appObj: appObj
-                };
+            // This variable will be passed into hasFile function.
+            var searchData = {
+                auth: link.session.auth,
+                path: (link.data.type === "a" ? M.config.APPLICATION_DESCRIPTOR_NAME : M.config.MODULE_DESCRIPTOR_NAME),
+                repo: currentRepo,
+                appObj: appObj,
+                secrets: SECRETS
+            };
 
-                // In same time hasFile function will be called multiple times.
-                // This is a great optimization method.
-                M.repo.hasFile("github", searchData, function (err, descriptor, data) {
+            if (link.session.provider === "github") {
+                searchData.user = appObj.owner.login;
+                searchData.auth.token = searchData.auth.access_token;
+            }
+            else {
+                searchData.user = appObj.owner;
+            }
 
-                    // Increment count.
-                    ++count;
-                    
-                    // An non-404 error ocured. Kill operation.
-                    if (err && err.code !== 404) {
-                        link.send(400, err);
-                        return;
-                    }
+            // In same time hasFile function will be called multiple times.
+            // This is a great optimization method.
+            M.repo.hasFile(link.session.provider, searchData, function (err, descriptor, data) {
 
-                    // The repo is a Mono project
-                    if (descriptor) {
+                // Increment count.
+                ++count;
+               
+                // An non-404 error ocured. Kill operation.
+                if (err && (err.code !== 404 && err.code !== "API_REPO_PATH_NOT_FOUND")) {
+                    link.send(400, err);
+                    return;
+                }
 
-                        var jsonDescriptor;
-                        try {
-                            jsonDescriptor = JSON.parse(descriptor);
-                        }
-                        catch(e) {}
+                // The repo is a Mono project
+                if (descriptor) {
 
-                        if (jsonDescriptor) {
-                            appObj = data.appObj;
-                            var repo = reposArray[i];
-                            
-                            // Data to insert in database for each Mono project
-                            var monoProjectData = {
-                                "type": link.data.type,
-                                "owner": link.session._uid,
-                                "ownership": link.data.subtype,
-                                "repo_url": appObj.git_url,
-                                "repo": "github/" + appObj.full_name,
-                                "name": jsonDescriptor.name,
-                                "descriptor": jsonDescriptor
-                            };
-                            
-                            // Push project data in Mono projects array.
-                            monoProjects.push(monoProjectData);
-                        }
-                    }
+                    var jsonDescriptor;
+                    try { jsonDescriptor = JSON.parse(descriptor); } catch(e) {}
 
-                    // When count is reposArray.length, all repos were completed
-                    if (count === reposArray.length) {
-                   
-                        var filters = { 
-                            "type": link.data.type,
-                            "ownership": link.data.subtype
-                        };
-
-                        var options = {};
+                    if (jsonDescriptor) {
                         
-                        Projects.delete(link, filters, options, function (err) {
-                            
+                        appObj = data.appObj;
+                        var repo = reposArray[i];
+                        
+                        // Data to insert in database for each Mono project
+                        var monoProjectData = {
+                            "type": link.data.type,
+                            "owner": link.session._uid,
+                            "ownership": link.data.subtype,
+                            "repo_url": appObj.git_url || "...not yet implemented for BB.",
+                            // TODO Find a shorter way. Maybe owner + slug for both providers?
+                            "repo": link.session.provider + "/" + (appObj.full_name || (appObj.owner + "/" + appObj.slug)),
+                            "name": jsonDescriptor.name,
+                            "descriptor": jsonDescriptor,
+                            "provider": link.session.provider
+                        };
+                        
+                        // Push project data in Mono projects array.
+                        monoProjects.push(monoProjectData);
+                    }
+                }
+
+                // When count is reposArray.length, all repos were completed
+                if (count === reposArray.length) {
+               
+                    var filters = { 
+                        "type": link.data.type,
+                        "ownership": link.data.subtype,
+                        "provider": link.session.provider
+                    };
+
+                    var options = {};
+                    
+                    Projects.delete(link, filters, options, function (err) {
+                        
+                        if (err) {
+                            link.send(400, err);
+                            return;
+                        }
+                       
+                        Projects.insert(link, monoProjects, function(err, data) {
+
                             if (err) {
                                 link.send(400, err);
                                 return;
                             }
-                           
-                            Projects.insert(link, monoProjects, function(err, data) {
-                                
-                                if (err) {
-                                    link.send(400, err);
-                                    return;
-                                }
 
-                                link.send(200, data);
-                            });
+                            link.send(200, data);
                         });
-                    }
-                });
-            }
-        });
-
-        return;
-    }
-
-    link.send(400, "Invalid provider.");
+                    });
+                }
+            });
+        }
+    });
 };
