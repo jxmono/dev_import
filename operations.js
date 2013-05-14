@@ -115,7 +115,6 @@ exports.importProjects = function(link) {
                     if (jsonDescriptor) {
                         
                         appObj = data.appObj;
-                        var repo = reposArray[i];
                         
                         // Data to insert in database for each Mono project
                         var monoProjectData = {
