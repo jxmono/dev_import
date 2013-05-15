@@ -95,7 +95,7 @@ exports.importProjects = function(link) {
 
             // In same time hasFile function will be called multiple times.
             // This is a great optimization method.
-            M.repo.hasFile(link.session.provider, searchData, function (err, descriptor, data) {
+            M.repo.getJsonFromRepo(link.session.provider, searchData, function (err, data, descriptor) {
 
                 // Increment count.
                 ++count;
@@ -109,29 +109,24 @@ exports.importProjects = function(link) {
                 // The repo is a Mono project
                 if (descriptor) {
 
-                    var jsonDescriptor;
-                    try { jsonDescriptor = JSON.parse(descriptor); } catch(e) {}
-
-                    if (jsonDescriptor) {
-                        
-                        appObj = data.appObj;
-                        
-                        // Data to insert in database for each Mono project
-                        var monoProjectData = {
-                            "type": link.data.type,
-                            "owner": link.session._uid,
-                            "ownership": link.data.subtype,
-                            "repo_url": appObj.git_url || "...not yet implemented for BB.",
-                            // TODO Find a shorter way. Maybe owner + slug for both providers?
-                            "repo": link.session.provider + "/" + (appObj.full_name || (appObj.owner + "/" + appObj.slug)),
-                            "name": jsonDescriptor.name,
-                            "descriptor": jsonDescriptor,
-                            "provider": link.session.provider
-                        };
-                        
-                        // Push project data in Mono projects array.
-                        monoProjects.push(monoProjectData);
-                    }
+                    
+                    appObj = data.appObj;
+                    
+                    // Data to insert in database for each Mono project
+                    var monoProjectData = {
+                        "type": link.data.type,
+                        "owner": link.session._uid,
+                        "ownership": link.data.subtype,
+                        "repo_url": appObj.git_url || "...not yet implemented for BB.",
+                        // TODO Find a shorter way. Maybe owner + slug for both providers?
+                        "repo": link.session.provider + "/" + (appObj.full_name || (appObj.owner + "/" + appObj.slug)),
+                        "name": descriptor.name,
+                        "descriptor": descriptor,
+                        "provider": link.session.provider
+                    };
+                    
+                    // Push project data in Mono projects array.
+                    monoProjects.push(monoProjectData);
                 }
 
                 // When count is reposArray.length, all repos were completed
