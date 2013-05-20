@@ -46,7 +46,7 @@ function handlers() {
                 showError(err);
             }
             else {
-                var message = "imported" + capitalizeFirstLetter(data.subtype) + "Apps";
+                var message = "imported" + capitalizeFirstLetter(data.subtype) + (data.type === "a" ? "Apps" : "Mods");
                 self.emit(message);
             }
 
