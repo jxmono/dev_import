@@ -1,3 +1,4 @@
+M.wrap('github/IonicaBizau/dev_import/dev/main.js', function (require, module, exports) {
 var self;
 
 module.exports = function (config) {
@@ -71,3 +72,5 @@ function showError(error) {
 function capitalizeFirstLetter(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
 }
+
+return module; });

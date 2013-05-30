@@ -46,22 +46,20 @@ exports.importProjects = function(link) {
     //      the accounts will be connected?
     switch (link.session.provider) {
         case "bitbucket":
-
             data.secrets = SECRETS;
-
-            if (!typeof OAUTH) { return link.send(400, "First, login with Bitbucket."); }
-        break;
+            //if (typeof OAUTH === 'undefined') { return link.send(400, "First, login with Bitbucket."); }
+            break;
 
         case "github":
             data.auth.token = data.auth.access_token;
-        break;
+            break;
 
         default:
             return link.session(400, "Invalid provider.");
     }
-    
+
     M.repo.getUserRepos(link.session.provider, data.user, data, function (err, reposArray) {
-        
+
         if (err) { return link.send(400, err); }
         
         var monoProjects = [];
@@ -109,7 +107,6 @@ exports.importProjects = function(link) {
                 // The repo is a Mono project
                 if (descriptor) {
 
-                    
                     appObj = data.appObj;
                     
                     // Data to insert in database for each Mono project
@@ -121,7 +118,7 @@ exports.importProjects = function(link) {
                         // TODO Find a shorter way. Maybe owner + slug for both providers?
                         "repo": link.session.provider + "/" + (appObj.full_name || (appObj.owner + "/" + appObj.slug)),
                         "name": descriptor.name,
-                        "descriptor": descriptor,
+                        "descriptor": JSON.stringify(descriptor),
                         "provider": link.session.provider
                     };
                     
@@ -131,7 +128,7 @@ exports.importProjects = function(link) {
 
                 // When count is reposArray.length, all repos were completed
                 if (count === reposArray.length) {
-               
+
                     var filters = { 
                         "type": link.data.type,
                         "ownership": link.data.subtype,
@@ -146,7 +143,7 @@ exports.importProjects = function(link) {
                             link.send(400, err);
                             return;
                         }
-                       
+
                         Projects.insert(link, monoProjects, function(err, data) {
 
                             if (err) {
