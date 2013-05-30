@@ -114,8 +114,7 @@ exports.importProjects = function(link) {
                         "type": link.data.type,
                         "owner": link.session._uid,
                         "ownership": link.data.subtype,
-                        "repo_url": appObj.git_url || "...not yet implemented for BB.",
-                        // TODO Find a shorter way. Maybe owner + slug for both providers?
+                        "repo_url": appObj.git_url || "git@bitbucket.org:" + appObj.owner + "/" + appObj.slug + ".git",
                         "repo": link.session.provider + "/" + (appObj.full_name || (appObj.owner + "/" + appObj.slug)),
                         "name": descriptor.name,
                         "descriptor": JSON.stringify(descriptor),
