@@ -118,7 +118,8 @@ exports.importProjects = function(link) {
                         "repo": link.session.provider + "/" + (appObj.full_name || (appObj.owner + "/" + appObj.slug)),
                         "name": descriptor.name,
                         "descriptor": JSON.stringify(descriptor),
-                        "provider": link.session.provider
+                        "provider": link.session.provider,
+                        "ownerUserName": link.session.login
                     };
                     
                     // Push project data in Mono projects array.
