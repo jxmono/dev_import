@@ -108,13 +108,13 @@ exports.importProjects = function(link) {
                 if (descriptor) {
 
                     appObj = data.appObj;
-                    
+
                     // Data to insert in database for each Mono project
                     var monoProjectData = {
                         "type": link.data.type,
                         "owner": link.session._uid,
                         "ownership": link.data.subtype,
-                        "repo_url": appObj.git_url || "git@bitbucket.org:" + appObj.owner + "/" + appObj.slug + ".git",
+                        "repo_url": appObj.ssh_url || "git@bitbucket.org:" + appObj.owner + "/" + appObj.slug + ".git",
                         "repo": link.session.provider + "/" + (appObj.full_name || (appObj.owner + "/" + appObj.slug)),
                         "name": descriptor.name,
                         "appId": descriptor.appId,
