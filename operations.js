@@ -117,6 +117,7 @@ exports.importProjects = function(link) {
                         "repo_url": appObj.git_url || "git@bitbucket.org:" + appObj.owner + "/" + appObj.slug + ".git",
                         "repo": link.session.provider + "/" + (appObj.full_name || (appObj.owner + "/" + appObj.slug)),
                         "name": descriptor.name,
+                        "appId": descriptor.appId,
                         "descriptor": JSON.stringify(descriptor),
                         "provider": link.session.provider,
                         "ownerUserName": link.session.login
