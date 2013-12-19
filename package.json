@@ -8,15 +8,9 @@
     "url": "git://github.com/IonicaBizau/dev_import.git"
   },
   "mono": {
-    "source": "github",
-    "owner": "IonicaBizau",
-    "name": "dev_import",
     "dependencies": [
         "/main.js",
         "http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"
-    ],
-    "operations": [
-        { "file": "operations.js", "function": "importProjects" }
     ]
   },
   "keywords": [
