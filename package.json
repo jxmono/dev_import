@@ -1,0 +1,33 @@
+{
+  "name": "dev_import",
+  "version": "0.0.0",
+  "description": "Mono module that will import apps from Github",
+  "main": "main.js",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/IonicaBizau/dev_import.git"
+  },
+  "mono": {
+    "source": "github",
+    "owner": "IonicaBizau",
+    "name": "dev_import",
+    "dependencies": [
+        "/main.js",
+        "http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"
+    ],
+    "operations": [
+        { "file": "operations.js", "function": "importProjects" }
+    ]
+  },
+  "keywords": [
+    "import",
+    "mono",
+    "applications",
+    "modules"
+  ],
+  "author": "Ionică Bizău",
+  "bugs": {
+    "url": "https://github.com/IonicaBizau/dev_import/issues"
+  },
+  "homepage": "https://github.com/IonicaBizau/dev_import"
+}
